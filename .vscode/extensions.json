@@ -4,6 +4,7 @@
         "scala-lang.scala-snippets",
         "ms-azuretools.vscode-docker",
         "scalameta.metals",
-        "visualstudioexptteam.vscodeintellicode"
+        "visualstudioexptteam.vscodeintellicode",
+        "rangav.vscode-thunder-client"
     ]
 }
