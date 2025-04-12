@@ -20,7 +20,8 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor-typed" % "2.8.5", // provides the typed actor system implementation; more typesafe API; builds using the actor model
   "com.typesafe.akka" %% "akka-stream" % "2.8.5", // implements reactive stream for streaming data pipelines
   "com.typesafe.akka" %% "akka-http" % "10.5.2", // http server & client; built on top of Akka Stream
-  "com.typesafe.akka" %% "akka-http-spray-json" % "10.5.2" // json marshalling/unmarshalling support for Akka HTTP
+  "com.typesafe.akka" %% "akka-http-spray-json" % "10.5.2", // json marshalling/unmarshalling support for Akka HTTP
+  "ch.qos.logback" % "logback-classic" % "1.4.14" // https://logback.qos.ch/manual/introduction.html
 )
 
 // Here, `libraryDependencies` is a set of dependencies, and by using `+=`,
