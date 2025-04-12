@@ -1,0 +1,9 @@
+{
+    "recommendations": [
+        "scala-lang.scala",
+        "scala-lang.scala-snippets",
+        "ms-azuretools.vscode-docker",
+        "scalameta.metals",
+        "visualstudioexptteam.vscodeintellicode"
+    ]
+}

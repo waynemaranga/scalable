@@ -1,0 +1,24 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.watcherExclude": {
+			"**/target": true
+		},
+		"files.associations": {
+			// "*.sbt": ""
+		},
+		"[scala]": {
+			"editor.suggestSelection": "first",
+			"editor.formatOnPaste": true,
+			"editor.formatOnType": true,
+			"editor.defaultFormatter": "scalameta.metals"
+		}
+	},
+	"extensions": {
+		"recommendations": []
+	}
+}
