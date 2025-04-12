@@ -11,7 +11,15 @@ object Main extends App {
   val formattedCurrentTime = currentTime.format(datetimeFormatter)
   val javaHomeDirectory = Library.getJavaHomeDir()
 
+  
   println(s"😄 Hello $yourName, its $formattedCurrentTime")
   // println(Library.getJavaHomeDir())
   println(s"Your Java home directory is $javaHomeDirectory")
+
+  print("🔣 Select an environment variable: ")
+  var envVarName = readLine() // returns string or null
+  var envVarValue = Library.getEnvVar(envVarName)
+  println(s"The env. var. $envVarName is: $envVarValue")
+
+  println("👋 Goodbye!")
 }
