@@ -7,11 +7,12 @@ object Main extends App {
   val yourName = readLine() // User input from std. in.
 
   val currentTime = LocalDateTime.now()
-  val datetimeFormatter = DateTimeFormatter.ofPattern("h:mm a") // https://www.digitalocean.com/community/tutorials/java-simpledateformat-java-date-format
+  val datetimeFormatter = DateTimeFormatter.ofPattern(
+    "h:mm a" // / https://www.digitalocean.com/community/tutorials/java-simpledateformat-java-date-format
+  )
   val formattedCurrentTime = currentTime.format(datetimeFormatter)
   val javaHomeDirectory = Library.getJavaHomeDir()
 
-  
   println(s"😄 Hello $yourName, its $formattedCurrentTime!")
   // println(Library.getJavaHomeDir())
   println(s"☕ Your Java home directory is $javaHomeDirectory")

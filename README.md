@@ -1,6 +1,8 @@
 # Scalable: Learning Scala
 
-1. Setup Scala using Coursier: https://get-coursier.io/docs/cli-installation#native-launcher
+## Setup
+
+Setup Scala using Coursier: https://get-coursier.io/docs/cli-installation#native-launcher
 
 ```bash
 curl -fL "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux.gz" | gzip -d > cs
@@ -10,7 +12,7 @@ chmod +x cs
 # Fedora
 sudo dnf install java-17-openjdk-src # downloading java-17-sdk src.zip for Goto. defns. etc
 # Ubuntu/Debian
-sudo apt install java-17-openjdk-src # TODO: fix
+sudo apt install openjdk-17-source # TODO: fix
 ```
 
 - add the `coursier` directory to `$PATH` (probably ~/.local/share/coursier/bin/)
@@ -20,7 +22,7 @@ sudo apt install java-17-openjdk-src # TODO: fix
   - (bash) - `export JAVA_HOME="/usr/lib/jvm/java-17-openjdk-17.0.12.0.7-2.fc40.x86_64"`
   - (fish) - `set -x JAVA_HOME "/usr/lib/jvm/java-17-openjdk-17.0.12.0.7-2.fc40.x86_64"`
 
-2. Scala quickstarts:
+## Quickstarts
 
 - https://learnxinyminutes.com/scala/
 - https://docs.scala-lang.org/ | https://docs.scala-lang.org/toolkit/introduction.html |
@@ -29,18 +31,24 @@ sudo apt install java-17-openjdk-src # TODO: fix
 - https://jeoygin.gitbooks.io/learn-y-in-x-minutes/content/scala.html
 - https://youtu.be/I7-hxTbpscU?feature=shared
 
-3. Extensions/Dev. Tools
+## Developer Tools/Extensions
 
 - Metals : Scala Language Server <https://scalameta.org/metals/docs/installation/overview.html>
 - `sbt` : Scala Build Tool <https://www.scala-sbt.org/download.html>
+- `bloop` : Scala REPL <https://www.scala-lang.org/download/2.13.10.html>\
+- `scalafmt` : Scala Formatter <https://scalameta.org/scalafmt/docs/installation.html>
+<!-- - `scalafix -->
 
-4.  Setup Postgres database with JDBC connector
+## DB
+
+Setup Postgres database with JDBC connector
 
 - This project uses AzureSQL and Postgres from Azure
 
-5. Cheatsheet
-   1. Scala in 100 Seconds <https://youtu.be/I7-hxTbpscU?feature=shared>
-   2. Sending HTTP Requests <https://docs.scala-lang.org/toolkit/http-client-intro.html>
-   3. Handling JSON <https://docs.scala-lang.org/toolkit/json-intro.html>
-   4. Building Web Servers <https://docs.scala-lang.org/toolkit/web-server-intro.html>
-   5.
+## Cheatsheet
+
+1.  Scala in 100 Seconds <https://youtu.be/I7-hxTbpscU?feature=shared>
+2.  Sending HTTP Requests <https://docs.scala-lang.org/toolkit/http-client-intro.html>
+3.  Handling JSON <https://docs.scala-lang.org/toolkit/json-intro.html>
+4.  Building Web Servers <https://docs.scala-lang.org/toolkit/web-server-intro.html>
+5.
