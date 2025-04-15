@@ -15,13 +15,17 @@ version := "0.0.1"
 // You can define other libraries as dependencies in your build like this:
 // Typesafe Configuration for JVM languages: https://github.com/lightbend/config?tab=readme-ov-file#api-example
 
+// Dependencies: https://index.scala-lang.org/search?language=3
 libraryDependencies ++= Seq(
     // Akka: https://doc.akka.io/libraries/akka-http/current/introduction.html
   "com.typesafe.akka" %% "akka-actor-typed" % "2.8.5", // provides the typed actor system implementation; more typesafe API; builds using the actor model
   "com.typesafe.akka" %% "akka-stream" % "2.8.5", // implements reactive stream for streaming data pipelines
   "com.typesafe.akka" %% "akka-http" % "10.5.2", // http server & client; built on top of Akka Stream
   "com.typesafe.akka" %% "akka-http-spray-json" % "10.5.2", // json marshalling/unmarshalling support for Akka HTTP
-  "ch.qos.logback" % "logback-classic" % "1.4.14" // https://logback.qos.ch/manual/introduction.html
+  "ch.qos.logback" % "logback-classic" % "1.4.14", // https://logback.qos.ch/manual/introduction.html,
+  "org.json4s" %% "json4s-jackson" % "4.0.6", // https://github.com/json4s/json4s?tab=readme-ov-file#guide
+  "org.json4s" %% "json4s-core" % "4.0.6",
+  "org.json4s" %% "json4s-native" % "4.0.6",
 )
 
 // Here, `libraryDependencies` is a set of dependencies, and by using `+=`,
