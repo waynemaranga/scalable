@@ -26,6 +26,7 @@ libraryDependencies ++= Seq(
   "org.json4s" %% "json4s-jackson" % "4.0.6", // https://github.com/json4s/json4s?tab=readme-ov-file#guide
   "org.json4s" %% "json4s-core" % "4.0.6",
   "org.json4s" %% "json4s-native" % "4.0.6",
+  "com.softwaremill.sttp.client3" %% "core" % "3.9.4", // https://docs.scala-lang.org/toolkit/http-client-intro.html
 )
 
 // Here, `libraryDependencies` is a set of dependencies, and by using `+=`,

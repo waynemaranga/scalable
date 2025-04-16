@@ -23,8 +23,8 @@ object Main extends App {
   var envVarValue = Library.getEnvVar(envVarName)
   println(s"ℹ️ The env. var. $envVarName is: $envVarValue")
 
-  // 🔮 Use Azure OpenAI here
-  val aiMessage = AzureOpenAIClient.complete(s"Say hello in very verbose terms to $yourName")
+  // 🔮: 
+  val aiMessage = AzureOpenAIClient.formattedComplete(s"Say hello in very verbose terms to $yourName")
   println(s"🤖 AzureOpenAI says: $aiMessage")
 
   HttpServer.start() // 🛫
