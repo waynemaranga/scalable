@@ -22,6 +22,8 @@ object AzureJsonProtocol extends DefaultJsonProtocol {
 
   implicit val msgFormat: RootJsonFormat[Message] = jsonFormat2(ai.AzureJsonProtocol.Message.apply)
   implicit val reqFormat: RootJsonFormat[Request] = jsonFormat2(ai.AzureJsonProtocol.Request.apply)
+  implicit val customResponseFormat: RootJsonFormat[CustomResponse] = jsonFormat3(ai.AzureJsonProtocol.CustomResponse.apply)
+
   // implicit val choiceFormat: RootJsonFormat[Choice] = jsonFormat1(Choice)
   // implicit val responseFormat: RootJsonFormat[Response] = jsonFormat1(Response)
 
