@@ -1,24 +1,25 @@
 {
-	"folders": [
-		{
-			"path": "."
-		}
-	],
-	"settings": {
-		"files.watcherExclude": {
-			"**/target": true
-		},
-		"files.associations": {
-			// "*.sbt": ""
-		},
-		"[scala]": {
-			"editor.suggestSelection": "first",
-			"editor.formatOnPaste": true,
-			"editor.formatOnType": true,
-			"editor.defaultFormatter": "scalameta.metals"
-		}
-	},
-	"extensions": {
-		"recommendations": []
-	}
+  "folders": [
+    {
+      "path": "."
+    }
+  ],
+  "settings": {
+    "files.watcherExclude": {
+      "**/target": true
+    },
+    "files.associations": {
+      // "*.sbt": ""
+    },
+    "[scala]": {
+      "editor.suggestSelection": "first",
+      "editor.formatOnPaste": false,
+      "editor.formatOnType": false,
+      "editor.formatOnSave": false,
+      "editor.defaultFormatter": "scalameta.metals"
+    }
+  },
+  "extensions": {
+    "recommendations": []
+  }
 }

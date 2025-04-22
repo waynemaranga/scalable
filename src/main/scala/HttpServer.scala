@@ -16,6 +16,15 @@ import scala.concurrent.{ ExecutionContextExecutor, Future } // Concurrency in S
 import spray.json._
 import ai.AzureOpenAIClient
 import ai.AzureJsonProtocol._
+import ai.CohereClient
+import ai.CompletionResponse
+import ai.CohereJsonProtocol._ 
+
+
+// JSON support for Cohere responses
+object CohereJsonProtocol extends DefaultJsonProtocol {
+  implicit val completionResponseFormat: RootJsonFormat[CompletionResponse] = jsonFormat2(ai.CompletionResponse.apply)
+}
 
 object HttpServer {
 
@@ -25,6 +34,9 @@ object HttpServer {
   implicit val system: ActorSystem = ActorSystem("simple-system") // container for all actors
   implicit val ec: ExecutionContextExecutor = system.dispatcher
   // ... ↪️ marked implicit because required by many akka methods without explicitly passing them
+
+  // Initialize Cohere client
+  val cohereClient = CohereClient(CohereClient.getApiKey())
 
   // --- Route(r)
   val routes: Route =
@@ -39,21 +51,43 @@ object HttpServer {
           entity(as[String]) { message => complete(s"✅ Received: $message") }
         }
       },
-      // POST
-      path("chat") { 
-        // TODO: FIXME: no specification of JSON input; 
-        entity(as[String]) { prompt => 
-          onComplete(Future(AzureOpenAIClient.formattedComplete(prompt))) {
-            //
-            case scala.util.Success(scala.util.Success(response)) =>
-              complete(HttpEntity(ContentTypes.`application/json`,response.toJson.prettyPrint))
-            //
-            case scala.util.Success(scala.util.Failure(exception)) =>
-              complete(InternalServerError, s"${exception.getMessage}")
-            //
-            case scala.util.Failure(exception) =>
-              complete(InternalServerError, s"${exception.getMessage}")
 
+      // --- Azure OpenAI endpoint
+      path("azure") { 
+        post {
+          entity(as[String]) { prompt => 
+            onComplete(Future(AzureOpenAIClient.formattedComplete(prompt))) {
+              case scala.util.Success(scala.util.Success(response)) =>
+                complete(HttpEntity(ContentTypes.`application/json`, response.toJson.prettyPrint))
+              case scala.util.Success(scala.util.Failure(exception)) =>
+                complete(InternalServerError, s"Azure Error: ${exception.getMessage}")
+              case scala.util.Failure(exception) =>
+                complete(InternalServerError, s"Server Error: ${exception.getMessage}")
+            }
+          }
+        }
+      },
+
+      // --- Cohere endpoint
+      path("cohere") {
+        post {
+          parameters("model".?) { modelOpt =>
+            entity(as[String]) { prompt =>
+              val futureResult = if (modelOpt.isEmpty) {Future(cohereClient.complete(prompt))
+              } else {
+                Future(cohereClient.complete(prompt))
+                // Future(cohereClient.completeWithModel(prompt, modelOpt.get))
+              }
+              
+              onComplete(futureResult) {
+                case scala.util.Success(scala.util.Success(response)) =>
+                  complete(HttpEntity(ContentTypes.`application/json`, response.toJson.prettyPrint))
+                case scala.util.Success(scala.util.Failure(exception)) =>
+                  complete(InternalServerError, s"Cohere Error: ${exception.getMessage}")
+                case scala.util.Failure(exception) =>
+                  complete(InternalServerError, s"Server Error: ${exception.getMessage}")
+              }
+            }
           }
         }
       }
@@ -66,6 +100,11 @@ object HttpServer {
       Http().newServerAt("localhost", 3254).bind(routes)
 
     println("🚀 Server online at http://localhost:3254/")
+    println("📌 Available endpoints:")
+    println("   - GET  /hello")
+    println("   - POST /message")
+    println("   - POST /azure")
+    println("   - POST /cohere?model=optional-model-name")
     println("⌨️ Press RETURN to stop...")
     StdIn.readLine()
 
