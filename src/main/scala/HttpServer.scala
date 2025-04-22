@@ -21,11 +21,6 @@ import ai.CompletionResponse
 import ai.CohereJsonProtocol._ 
 
 
-// JSON support for Cohere responses
-object CohereJsonProtocol extends DefaultJsonProtocol {
-  implicit val completionResponseFormat: RootJsonFormat[CompletionResponse] = jsonFormat2(ai.CompletionResponse.apply)
-}
-
 object HttpServer {
 
   /** `HttpServer.start` the HTTP here
@@ -48,7 +43,7 @@ object HttpServer {
       // POST endpoint
       path("message") { // i.e http://localhost:3254/message; request body is of type Text
         post {
-          entity(as[String]) { message => complete(s"✅ Received: $message") }
+          entity(as[String]) { (message: String) => complete(s"✅ Received: $message") }
         }
       },
 
@@ -71,26 +66,26 @@ object HttpServer {
       // --- Cohere endpoint
       path("cohere") {
         post {
-          parameters("model".?) { modelOpt =>
-            entity(as[String]) { prompt =>
-              val futureResult = if (modelOpt.isEmpty) {Future(cohereClient.complete(prompt))
-              } else {
-                Future(cohereClient.complete(prompt))
-                // Future(cohereClient.completeWithModel(prompt, modelOpt.get))
-              }
-              
-              onComplete(futureResult) {
-                case scala.util.Success(scala.util.Success(response)) =>
-                  complete(HttpEntity(ContentTypes.`application/json`, response.toJson.prettyPrint))
-                case scala.util.Success(scala.util.Failure(exception)) =>
-                  complete(InternalServerError, s"Cohere Error: ${exception.getMessage}")
-                case scala.util.Failure(exception) =>
-                  complete(InternalServerError, s"Server Error: ${exception.getMessage}")
-              }
+          entity(as[String]) { prompt =>
+            val futureResult = Future {
+              cohereClient.complete(prompt)
+            }
+      
+            onComplete(futureResult) {
+              case scala.util.Success(scala.util.Success(response)) =>
+                complete(HttpEntity(ContentTypes.`application/json`, response.toJson.prettyPrint))
+      
+              case scala.util.Success(scala.util.Failure(exception)) =>
+                complete(InternalServerError, s"Cohere Error: ${exception.getMessage}")
+      
+              case scala.util.Failure(exception) =>
+                complete(InternalServerError, s"Server Error: ${exception.getMessage}")
             }
           }
         }
       }
+      
+      
     )
 
   // -- Starting the server with the HTTP instance...
@@ -104,7 +99,7 @@ object HttpServer {
     println("   - GET  /hello")
     println("   - POST /message")
     println("   - POST /azure")
-    println("   - POST /cohere?model=optional-model-name")
+    println("   - POST /cohere")
     println("⌨️ Press RETURN to stop...")
     StdIn.readLine()
 

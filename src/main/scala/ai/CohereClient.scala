@@ -1,16 +1,20 @@
 package ai
 
 import scala.util.{Try, Success, Failure}
-import scala.concurrent.{Future, ExecutionContext, Await}
+import scala.concurrent.{Future, Await}
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
-import scala.io.Source
-import java.net.{HttpURLConnection, URL}
-import java.io.{BufferedReader, InputStreamReader, OutputStream}
 import sttp.client3._
 import spray.json._
 import DefaultJsonProtocol._
 
-case class CompletionResponse(tokens: Int, text: String)
+// Updated response models to match API structure
+case class CompletionResponse(id: String, finishReason: String, message: Message, usage: Usage)
+case class Message(role: String, content: List[MessageContent])
+case class MessageContent(contentType: String, text: String)
+case class Usage(billedUnits: BilledUnits, tokens: Tokens)
+case class BilledUnits(inputTokens: Int, outputTokens: Int)
+case class Tokens(inputTokens: Int, outputTokens: Int)
 case class ToolCallResult(result: Map[String, String])
 
 // JSON Protocol for CohereClient
@@ -22,6 +26,8 @@ object CohereJsonProtocol extends DefaultJsonProtocol {
       case n: Int => JsNumber(n)
       case d: Double => JsNumber(d)
       case b: Boolean => JsBoolean(b)
+      case m: Map[_, _] => mapFormat[Any].write(m.asInstanceOf[Map[String, Any]])
+      case l: List[_] => listFormat[Any].write(l.asInstanceOf[List[Any]])
       case _ => JsNull
     }
     def read(value: JsValue): Any = value match {
@@ -32,8 +38,33 @@ object CohereJsonProtocol extends DefaultJsonProtocol {
     }
   }
 
+  // Custom format for MessageContent with field name transformation
+  implicit val messageContentFormat: RootJsonFormat[MessageContent] = jsonFormat(
+    (contentType: String, text: String) => MessageContent(contentType, text), "type", "text")
+  
+  implicit val messageFormat: RootJsonFormat[Message] = jsonFormat2(ai.Message.apply)
+  
+  implicit val billedUnitsFormat: RootJsonFormat[BilledUnits] = jsonFormat(
+    (inputTokens: Int, outputTokens: Int) => BilledUnits(inputTokens, outputTokens), "input_tokens", "output_tokens")
+  
+  implicit val tokensFormat: RootJsonFormat[Tokens] = jsonFormat(
+    (inputTokens: Int, outputTokens: Int) => Tokens(inputTokens, outputTokens),
+    "input_tokens", "output_tokens"
+  )
+  
+  implicit val usageFormat: RootJsonFormat[Usage] = jsonFormat(
+    (billedUnits: BilledUnits, tokens: Tokens) => Usage(billedUnits, tokens),
+    "billed_units", "tokens"
+  )
+  
+  // Main response format with field name transformations
+  implicit val completionResponseFormat: RootJsonFormat[CompletionResponse] = jsonFormat(
+    (id: String, finishReason: String, message: Message, usage: Usage) => 
+      CompletionResponse(id, finishReason, message, usage),
+    "id", "finish_reason", "message", "usage"
+  )
+
   implicit def mapFormat[V](implicit valueFormat: JsonFormat[V]): RootJsonFormat[Map[String, V]] = mapFormat[String, V]
-  implicit val completionResponseFormat: RootJsonFormat[CompletionResponse] = jsonFormat2(CompletionResponse.apply)
   implicit val toolCallResultFormat: RootJsonFormat[ToolCallResult] = jsonFormat1(ToolCallResult.apply)
 }
 
@@ -45,15 +76,14 @@ class CohereClient(apiKey: String)(implicit ec: ExecutionContext) {
 
   def complete(prompt: String): Try[CompletionResponse] = {
     Try {
-      val uri = "https://api.cohere.ai/v2/chat"
+      val uri = "https://api.cohere.com/v2/chat"
       val model = "command-a-03-2025"
       
-      // Create the request payload
+      // Create the request payload with messages format
+      val message = Map("role" -> "user", "content" -> prompt)
       val payloadMap = Map[String, Any](
         "model" -> model,
-        "prompt" -> prompt,
-        "max_tokens" -> 1024,
-        "temperature" -> 0.7
+        "messages" -> List(message)
       )
       
       val payload = payloadMap.toJson.compactPrint
@@ -73,59 +103,19 @@ class CohereClient(apiKey: String)(implicit ec: ExecutionContext) {
         case Left(errorMsg) => throw new RuntimeException(s"Error: $errorMsg")
       }
       
-      // Parse the JSON response
-      val json = responseBody.parseJson.asJsObject
-      val text = json.fields("generations").asInstanceOf[JsArray].elements.head.asJsObject.fields("text").convertTo[String]
-      val tokens = json.fields("meta").asJsObject.fields("billed_units").asJsObject.fields("output_tokens").convertTo[Int]
-      
-      CompletionResponse(tokens, text)
+      // Parse the JSON response using our updated formats
+      val parsedResponse = responseBody.parseJson.convertTo[CompletionResponse]
+      parsedResponse
     }
   }
 
-  // Add this method to support the model parameter while maintaining the original API
-  def completeWithModel(prompt: String, model: String): Try[CompletionResponse] = {
-    Try {
-      val uri = "https://api.cohere.ai/v2/chat"
-      
-      // Create the request payload
-      val payloadMap = Map[String, Any](
-        "model" -> model,
-        "prompt" -> prompt,
-        "max_tokens" -> 1024,
-        "temperature" -> 0.7
-      )
-      
-      val payload = payloadMap.toJson.compactPrint
-      
-      // Rest of the implementation as before
-      val request = basicRequest
-        .post(uri"$uri")
-        .header("Authorization", s"Bearer $apiKey")
-        .header("Content-Type", "application/json")
-        .body(payload)
-      
-      val response = request.send(backend)
-      
-      val responseBody = response.body match {
-        case Right(body) => body
-        case Left(errorMsg) => throw new RuntimeException(s"Error: $errorMsg")
-      }
-      
-      val json = responseBody.parseJson.asJsObject
-      val text = json.fields("generations").asInstanceOf[JsArray].elements.head.asJsObject.fields("text").convertTo[String]
-      val tokens = json.fields("meta").asJsObject.fields("billed_units").asJsObject.fields("output_tokens").convertTo[Int]
-      
-      CompletionResponse(tokens, text)
-    }
-  }
-
-  def completeAsync(prompt: String, model: String): Future[CompletionResponse] = {
+  def completeAsync(prompt: String): Future[CompletionResponse] = {
     Future {
-      completeWithModel(prompt, model) match {
+      complete(prompt) match {
         case Success(response) => response
         case Failure(exception) => throw exception
       }
-    }
+    }(ec)
   }
 
   def toolCall(prompt: String, tools: List[Map[String, Any]]): Try[ToolCallResult] = {
@@ -151,21 +141,11 @@ object CohereClient {
     
     client.complete(prompt) match {
       case Success(result) =>
-        println(s"Response received (${result.tokens} tokens):")
-        println(result.text)
-      case Failure(exception) =>
-        println(s"Error: ${exception.getMessage}")
-    }
-  }
-  
-  def testCompletionWithModel(prompt: String, model: String = "command-a-03-2025"): Unit = {
-    println(s"Sending prompt with model $model: '$prompt'")
-    val client = CohereClient(getApiKey())
-    
-    client.completeWithModel(prompt, model) match {
-      case Success(result) =>
-        println(s"Response received (${result.tokens} tokens):")
-        println(result.text)
+        println(s"Response ID: ${result.id}")
+        println(s"Finish reason: ${result.finishReason}")
+        println(s"Output tokens: ${result.usage.billedUnits.outputTokens}")
+        println("Response text:")
+        result.message.content.foreach(content => println(content.text))
       case Failure(exception) =>
         println(s"Error: ${exception.getMessage}")
     }
@@ -176,9 +156,12 @@ object CohereClient {
     val client = CohereClient(getApiKey())
     
     try {
-      val result = Await.result(client.completeAsync(prompt, "command-a-03-2025"), 30.seconds)
-      println(s"Response received (${result.tokens} tokens):")
-      println(result.text)
+      val result = Await.result(client.completeAsync(prompt), 30.seconds)
+      println(s"Response ID: ${result.id}")
+      println(s"Finish reason: ${result.finishReason}")
+      println(s"Output tokens: ${result.usage.billedUnits.outputTokens}")
+      println("Response text:")
+      result.message.content.foreach(content => println(content.text))
     } catch {
       case exception: Exception => println(s"Error: ${exception.getMessage}")
     }
@@ -206,9 +189,6 @@ object CohereClient {
         |
         |Test completion:
         |  testCompletion("Your prompt here")
-        |
-        |Test completion with specific model:
-        |  testCompletionWithModel("Your prompt here", "model-name")
         |
         |Test async completion:
         |  testAsyncCompletion("Your prompt here")
