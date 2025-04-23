@@ -10,7 +10,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.Http.ServerBinding
-import scala.util.Failure
+import scala.util.{Try, Success, Failure}
 import scala.io.StdIn
 import scala.concurrent.{ ExecutionContextExecutor, Future } // Concurrency in Scala: https://docs.scala-lang.org/scala3/book/concurrency.html#introduction
 import spray.json._
@@ -18,7 +18,8 @@ import ai.AzureOpenAIClient
 import ai.AzureJsonProtocol._
 import ai.CohereClient
 import ai.CompletionResponse
-import ai.CohereJsonProtocol._ 
+import ai.CohereJsonProtocol._
+import db.JDBCClient
 
 
 object HttpServer {
@@ -83,9 +84,56 @@ object HttpServer {
             }
           }
         }
-      }
-      
-      
+      },
+
+      pathPrefix("db") {
+        concat(
+          path("timestamp") {
+            get {
+              onComplete(Future.fromTry(JDBCClient.getCurrentTimestamp())) { 
+                case Success(timestamp) => complete(HttpEntity(ContentTypes.`text/plain(UTF-8)`, s"Current Timestamp: $timestamp"))
+                case Failure(ex) => complete(HttpResponse(StatusCodes.InternalServerError, entity = s"Error: ${ex.getMessage}"))
+              }
+            }
+          },
+          /** */
+          path("tables") {
+            get {
+              onComplete(Future.fromTry(JDBCClient.listTables())) { 
+                case Success(tables: List[String]) => 
+                  val response = tables.mkString("\n")
+                  complete(HttpEntity(ContentTypes.`text/plain(UTF-8)`, response))
+                case Failure(ex) =>
+                  complete(HttpResponse(StatusCodes.InternalServerError, entity = s"Error: ${ex.getMessage}"))
+              }
+            }
+          },
+          /** */
+          path("columns" / Segment) { tableName =>
+            get {
+              // Convert Try to Future before passing to onComplete
+              onComplete(Future.fromTry(JDBCClient.listColumns(tableName): Try[List[String]])) {
+                case Success(columns) =>
+                  val response = columns.mkString("\n")
+                  complete(HttpEntity(ContentTypes.`text/plain(UTF-8)`, response))
+                case Failure(ex) =>
+                  complete(HttpResponse(StatusCodes.InternalServerError, entity = s"Error: ${ex.getMessage}"))
+              }
+            }
+          },
+          /** */
+          path("count" / Segment) { tableName =>
+            get {
+              onComplete(Future.fromTry(JDBCClient.countRows(tableName))) { // <- Change this line
+                case Success(count) =>
+                  complete(HttpEntity(ContentTypes.`text/plain(UTF-8)`, s"Row count for $tableName: $count"))
+                case Failure(ex) =>
+                  complete(HttpResponse(StatusCodes.InternalServerError, entity = s"Error: ${ex.getMessage}"))
+              }
+            }
+          }
+        )
+      }     
     )
 
   // -- Starting the server with the HTTP instance...
