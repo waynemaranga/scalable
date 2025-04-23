@@ -3,6 +3,7 @@ from openai import AzureOpenAI
 import pyodbc
 
 # pip install pyodbc
+# https://packages.microsoft.com/ubuntu/22.04/mssql-server-2022/pool/main/m/mssql-server/
 # For Linux/macOS: https://learn.microsoft.com/en-us/sql/connect/odbc/linux-mac/installing-the-microsoft-odbc-driver-for-sql-server?view=sql-server-ver16&tabs=ubuntu18-install%2Cubuntu17-install%2Cdebian8-install%2Credhat7-13-install%2Crhel7-offline#18
 
 AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
