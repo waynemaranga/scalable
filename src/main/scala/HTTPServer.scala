@@ -148,6 +148,10 @@ object HttpServer {
     println("   - POST /message")
     println("   - POST /azure")
     println("   - POST /cohere")
+    println("   - GET  /db/timestamp")
+    println("   - GET  /db/tables")
+    println("   - GET  /db/columns/<table_name>")
+    println("   - GET  /db/count/<table_name>")
     println("⌨️ Press RETURN to stop...")
     StdIn.readLine()
 
