@@ -27,6 +27,8 @@ libraryDependencies ++= Seq(
   "org.json4s" %% "json4s-core" % "4.0.6",
   "org.json4s" %% "json4s-native" % "4.0.6",
   "com.softwaremill.sttp.client3" %% "core" % "3.9.4", // https://docs.scala-lang.org/toolkit/http-client-intro.html
+  "com.microsoft.sqlserver" % "mssql-jdbc" % "12.10.0.jre11", // https://learn.microsoft.com/en-us/azure/azure-sql/database/free-offer?view=azuresql | https://mvnrepository.com/artifact/com.microsoft.sqlserver/mssql-jdbc
+  //... ↪️ https://learn.microsoft.com/en-us/sql/connect/jdbc/download-microsoft-jdbc-driver-for-sql-server?view=sql-server-ver16
 )
 
 // Here, `libraryDependencies` is a set of dependencies, and by using `+=`,
